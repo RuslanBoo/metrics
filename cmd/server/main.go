@@ -11,11 +11,12 @@ func main() {
 	metricStorage := memory.New()
 	metricService := service.New(metricStorage)
 	metricHandler := handler.New(metricService)
+	metricConf := service.ParseServerFlags()
 
 	metricRouter := gin.Default()
 	metricHandler.RegisterRoutes(metricRouter)
 
-	if err := metricRouter.Run(":8080"); err != nil {
+	if err := metricRouter.Run(metricConf.Addr); err != nil {
 		panic(err)
 	}
 }

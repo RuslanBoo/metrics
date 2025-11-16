@@ -1,12 +1,12 @@
 package main
 
 import (
-	"time"
-
 	"github.com/RuslanBoo/metrics/internal/agent"
+	"github.com/RuslanBoo/metrics/internal/service"
 )
 
 func main() {
-	metricAgent := agent.New("http://localhost:8080", 2*time.Second, 10*time.Second)
+	metricConfig := service.ParseAgentFlags()
+	metricAgent := agent.New(metricConfig.Addr, metricConfig.PollInterval, metricConfig.ReportInterval)
 	metricAgent.Run()
 }
