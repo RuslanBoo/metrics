@@ -18,9 +18,7 @@ type MetricService struct {
 }
 
 func New(repo repository.Storage) *MetricService {
-	return &MetricService{
-		repository: repo,
-	}
+	return &MetricService{repository: repo}
 }
 
 func (s *MetricService) UpdateMetric(metricType, name, valueStr string) error {
@@ -41,4 +39,21 @@ func (s *MetricService) UpdateMetric(metricType, name, valueStr string) error {
 		return ErrUnknownMetricType
 	}
 	return nil
+}
+
+func (s *MetricService) GetMetric(metricType, name string) (interface{}, bool) {
+	switch metricType {
+	case string(models.GaugeType):
+		val, ok := s.repository.GetGauge(name)
+		return val, ok
+	case string(models.CounterType):
+		val, ok := s.repository.GetCounter(name)
+		return val, ok
+	default:
+		return nil, false
+	}
+}
+
+func (s *MetricService) GetAllMetrics() (map[string]models.Gauge, map[string]models.Counter) {
+	return s.repository.GetAllGauges(), s.repository.GetAllCounters()
 }

@@ -1,11 +1,10 @@
 package main
 
 import (
-	"net/http"
-
 	"github.com/RuslanBoo/metrics/internal/handler"
 	"github.com/RuslanBoo/metrics/internal/repository/memory"
 	"github.com/RuslanBoo/metrics/internal/service"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -13,11 +12,10 @@ func main() {
 	metricService := service.New(metricStorage)
 	metricHandler := handler.New(metricService)
 
-	metricMux := http.NewServeMux()
-	metricMux.HandleFunc(`/update/`, metricHandler.Update)
+	metricRouter := gin.Default()
+	metricHandler.RegisterRoutes(metricRouter)
 
-	err := http.ListenAndServe(`:8080`, metricMux)
-	if err != nil {
+	if err := metricRouter.Run(":8080"); err != nil {
 		panic(err)
 	}
 }

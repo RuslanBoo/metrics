@@ -7,4 +7,6 @@ type Storage interface {
 	AddCounter(name string, delta models.Counter)
 	GetGauge(name string) (models.Gauge, bool)
 	GetCounter(name string) (models.Counter, bool)
+	GetAllGauges() map[string]models.Gauge
+	GetAllCounters() map[string]models.Counter
 }

@@ -33,3 +33,19 @@ func (s *MemStorage) GetCounter(name string) (models.Counter, bool) {
 	v, ok := s.counters[name]
 	return v, ok
 }
+
+func (s *MemStorage) GetAllGauges() map[string]models.Gauge {
+	gaugesCopy := make(map[string]models.Gauge, len(s.gauges))
+	for k, v := range s.gauges {
+		gaugesCopy[k] = v
+	}
+	return gaugesCopy
+}
+
+func (s *MemStorage) GetAllCounters() map[string]models.Counter {
+	countersCopy := make(map[string]models.Counter, len(s.counters))
+	for k, v := range s.counters {
+		countersCopy[k] = v
+	}
+	return countersCopy
+}

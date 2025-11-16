@@ -3,17 +3,18 @@ package agent
 import (
 	"fmt"
 	"math/rand"
-	"net/http"
 	"runtime"
 	"strconv"
 	"time"
+
+	"github.com/go-resty/resty/v2"
 )
 
 type Agent struct {
 	serverAddr     string
 	pollInterval   time.Duration
 	reportInterval time.Duration
-	client         *http.Client
+	client         *resty.Client
 
 	pollCount int64
 }
@@ -23,7 +24,7 @@ func New(serverAddr string, pollInterval, reportInterval time.Duration) *Agent {
 		serverAddr:     serverAddr,
 		pollInterval:   pollInterval,
 		reportInterval: reportInterval,
-		client:         &http.Client{Timeout: 5 * time.Second},
+		client:         resty.New().SetTimeout(5 * time.Second),
 	}
 }
 
@@ -33,10 +34,8 @@ func (a *Agent) Run() {
 	defer pollTicker.Stop()
 	defer reportTicker.Stop()
 
-	var gauges map[string]float64
-	var counters map[string]int64
-	gauges = make(map[string]float64)
-	counters = make(map[string]int64)
+	gauges := make(map[string]float64)
+	counters := make(map[string]int64)
 
 	for {
 		select {
@@ -92,7 +91,6 @@ func (a *Agent) CollectMetrics() (map[string]float64, map[string]int64) {
 	}
 
 	a.pollCount++
-
 	counters := map[string]int64{"PollCount": a.pollCount}
 
 	return gauges, counters
@@ -105,23 +103,17 @@ func (a *Agent) GetPollCount() int64 {
 func (a *Agent) ReportGauges(gauges map[string]float64) {
 	for name, value := range gauges {
 		url := fmt.Sprintf("%s/update/gauge/%s/%s", a.serverAddr, name, strconv.FormatFloat(value, 'f', -1, 64))
-		req, _ := http.NewRequest(http.MethodPost, url, nil)
-		req.Header.Set("Content-Type", "text/plain")
-		resp, err := a.client.Do(req)
-		if err == nil && resp != nil {
-			resp.Body.Close()
-		}
+		a.client.R().
+			SetHeader("Content-Type", "text/plain").
+			Post(url)
 	}
 }
 
 func (a *Agent) ReportCounters(counters map[string]int64) {
 	for name, value := range counters {
 		url := fmt.Sprintf("%s/update/counter/%s/%d", a.serverAddr, name, value)
-		req, _ := http.NewRequest(http.MethodPost, url, nil)
-		req.Header.Set("Content-Type", "text/plain")
-		resp, err := a.client.Do(req)
-		if err == nil && resp != nil {
-			resp.Body.Close()
-		}
+		a.client.R().
+			SetHeader("Content-Type", "text/plain").
+			Post(url)
 	}
 }
