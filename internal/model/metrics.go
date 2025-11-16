@@ -1,8 +1,12 @@
 package models
 
+type Gauge float64
+type Counter int64
+type MetricType string
+
 const (
-	Counter = "counter"
-	Gauge   = "gauge"
+	GaugeType   MetricType = "gauge"
+	CounterType MetricType = "counter"
 )
 
 // NOTE: Не усложняем пример, вводя иерархическую вложенность структур.
