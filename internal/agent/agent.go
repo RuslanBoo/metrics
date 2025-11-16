@@ -107,8 +107,10 @@ func (a *Agent) ReportGauges(gauges map[string]float64) {
 		url := fmt.Sprintf("%s/update/gauge/%s/%s", a.serverAddr, name, strconv.FormatFloat(value, 'f', -1, 64))
 		req, _ := http.NewRequest(http.MethodPost, url, nil)
 		req.Header.Set("Content-Type", "text/plain")
-
-		_, _ = a.client.Do(req)
+		resp, err := a.client.Do(req)
+		if err == nil && resp != nil {
+			resp.Body.Close()
+		}
 	}
 }
 
@@ -117,6 +119,9 @@ func (a *Agent) ReportCounters(counters map[string]int64) {
 		url := fmt.Sprintf("%s/update/counter/%s/%d", a.serverAddr, name, value)
 		req, _ := http.NewRequest(http.MethodPost, url, nil)
 		req.Header.Set("Content-Type", "text/plain")
-		_, _ = a.client.Do(req)
+		resp, err := a.client.Do(req)
+		if err == nil && resp != nil {
+			resp.Body.Close()
+		}
 	}
 }

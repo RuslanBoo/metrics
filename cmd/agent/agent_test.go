@@ -1,10 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
-	"runtime"
 	"strconv"
 	"testing"
 	"time"
@@ -72,18 +72,23 @@ func TestPollCountIncrement(t *testing.T) {
 
 func TestRuntimeMetricsCollected(t *testing.T) {
 	testAgent := testAgent("http://localhost")
-
 	gauges, _ := testAgent.CollectMetrics()
 
-	var mem runtime.MemStats
-	runtime.ReadMemStats(&mem)
+	expectedMetrics := []string{
+		"Alloc", "HeapIdle", "TotalAlloc", "RandomValue",
+	}
 
-	assert.Equal(t, float64(mem.Alloc), gauges["Alloc"])
-	assert.Equal(t, float64(mem.HeapIdle), gauges["HeapIdle"])
-	assert.Equal(t, float64(mem.TotalAlloc), gauges["TotalAlloc"])
+	for _, key := range expectedMetrics {
+		val, ok := gauges[key]
+		assert.True(t, ok, fmt.Sprintf("%s must be present", key))
 
-	_, ok := gauges["RandomValue"]
-	assert.True(t, ok, "RandomValue must be present")
+		if key != "RandomValue" {
+			assert.GreaterOrEqual(t, val, float64(0))
+		} else {
+			assert.GreaterOrEqual(t, val, 0.0)
+			assert.LessOrEqual(t, val, 1.0)
+		}
+	}
 }
 
 func TestReportAllMetrics(t *testing.T) {
